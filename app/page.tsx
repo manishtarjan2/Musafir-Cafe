@@ -1,69 +1,286 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+const musicCards = [
+  { title: "After Rain", artist: "Arijit Singh", cover: "rain" },
+  { title: "Peaceful", artist: "Lo-Fi Playlist", cover: "portrait" },
+  { title: "Save Your Tears", artist: "The Weeknd", cover: "sea" },
+  { title: "Chill Vibes", artist: "Playlist", cover: "sky" },
+];
+
+const bookCards = [
+  { title: "The Silent Patient", author: "Alex Michaelides", cover: "cover-one" },
+  { title: "Ikigai", author: "Héctor García", cover: "cover-two" },
+  { title: "Atomic Habits", author: "James Clear", cover: "cover-three" },
+  { title: "The 5 AM Club", author: "Robin Sharma", cover: "cover-four" },
+  { title: "The Psychology of Money", author: "Morgan Housel", cover: "cover-five" },
+];
+
+const navItems = [
+  { label: "Home", href: "/" },
+  { label: "Music", href: "/music" },
+  { label: "Books", href: "/books" },
+  { label: "Cafe Thoughts", href: "/thoughts" },
+  { label: "Discover", href: "/discover" },
+];
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const shellRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!shellRef.current) {
+        return;
+      }
+
+      const target = event.target;
+      if (target instanceof Node && !shellRef.current.contains(target)) {
+        setMobileMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [mobileMenuOpen]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div ref={shellRef} className="musafir-shell">
+      <aside className={mobileMenuOpen ? "sidebar is-open" : "sidebar"}>
+        <div className="brand-block">
+          <div className="brand-mark" aria-label="Musafir Cafe logo">
+            <svg viewBox="0 0 120 120" role="img" aria-hidden="true">
+              <circle cx="60" cy="60" r="52" className="ring" />
+              <path d="M28 72c0-18 14-32 32-32s32 14 32 32v4H28v-4Z" className="cup" />
+              <path d="M36 74h48c0 13-10 23-24 23S36 87 36 74Z" className="steam" />
+              <path d="M60 26c9 11 13 22 13 34 0 11-4 19-13 26-9-7-13-15-13-26 0-12 4-23 13-34Z" className="sun" />
+              <path d="M29 39c6 8 11 15 16 19M91 39c-6 8-11 15-16 19M60 20v12M60 92v12" className="lines" />
+            </svg>
+          </div>
+          <div className="brand-text">
+            <span className="brand-name">Musafir</span>
+            <span className="brand-sub">CAFE</span>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <nav className="side-nav" aria-label="Sidebar navigation">
+          {navItems.map((item, index) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={index === 0 ? "nav-item active" : "nav-item"}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="nav-icon">
+                {index === 0 ? "⌂" : index === 1 ? "♫" : index === 2 ? "📖" : index === 3 ? "✎" : "◌"}
+              </span>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="mini-track">
+          <div className="mini-cover" />
+          <div className="mini-track-text">
+            <strong>The Night We Met</strong>
+            <span>Lord Huron</span>
+          </div>
+          <div className="mini-track-time">
+            <small>1:24</small>
+            <small>3:28</small>
+          </div>
         </div>
+
+        <div className="player-row">
+          <button aria-label="Shuffle">⤮</button>
+          <button aria-label="Previous">⏮</button>
+          <button className="play-button" aria-label="Play">▶</button>
+          <button aria-label="Next">⏭</button>
+          <button aria-label="Repeat">↻</button>
+        </div>
+      </aside>
+
+      <main className="main-panel">
+        <header className="topbar">
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+
+          <div className="search-box" role="search">
+            <span className="search-placeholder">Search songs, books, authors, artists, thoughts...</span>
+            <span className="search-icon">⌕</span>
+          </div>
+
+          <div className="user-meta">
+            <button className="bell" aria-label="Notifications">◔</button>
+            <div className="user-pill">
+              <div className="user-avatar">M</div>
+              <span>Manish</span>
+            </div>
+          </div>
+        </header>
+
+        <section id="home" className="hero-panel">
+          <div className="hero-copy">
+            <h1>
+              Good Evening, Manish <span>☕</span>
+            </h1>
+            <p>“Some journeys are meant to be felt, not explained.”</p>
+
+            <div className="chip-group">
+              <Link href="/music" className="chip active">For You</Link>
+              <Link href="/music" className="chip">Music</Link>
+              <Link href="/books" className="chip">Books</Link>
+              <Link href="/thoughts" className="chip">Thoughts</Link>
+            </div>
+          </div>
+
+          <div className="hero-scene" aria-label="Atmospheric cafe view" />
+        </section>
+
+        <section id="music" className="content-panel">
+          <div className="section-head">
+            <h2>Continue Listening <span>›</span></h2>
+            <Link href="/music" className="section-link">Open library</Link>
+          </div>
+
+          <div className="music-grid">
+            {musicCards.map((card) => (
+              <article key={card.title} className="music-card">
+                <div className={`cover cover-${card.cover}`}>
+                  <button className="play-mini" aria-label={`Play ${card.title}`}>
+                    ▶
+                  </button>
+                </div>
+                <div className="music-card-meta">
+                  <div className="track-name-row">
+                    <strong>{card.title}</strong>
+                    <span className="tiny-heart">♡</span>
+                  </div>
+                  <div className="track-sub-row">
+                    <span>{card.artist}</span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="books" className="content-panel">
+          <div className="section-head">
+            <h2>For You — Books <span>›</span></h2>
+            <Link href="/books" className="section-link">Browse shelf</Link>
+          </div>
+
+          <div className="book-grid">
+            {bookCards.map((book) => (
+              <article key={book.title} className="book-card">
+                <div className={`book-cover ${book.cover}`} />
+                <div className="book-title">{book.title}</div>
+                <div className="book-author">{book.author}</div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="thoughts" className="community-panel">
+          <div className="feed-header">
+            <div className="feed-tabs">
+              <button className="feed-tab active">All</button>
+              <button className="feed-tab">Following</button>
+              <button className="feed-tab">For You</button>
+            </div>
+            <Link href="/thoughts" className="write-btn">✎ View thoughts</Link>
+          </div>
+
+          <div className="thought-card">
+            <div className="thought-author-row">
+              <div className="thought-avatar">A</div>
+              <div>
+                <strong>Ananya</strong>
+                <span>2 hours ago</span>
+              </div>
+            </div>
+
+            <p>
+              There are days when a book understands you more than people do. What&apos;s that one book you&apos;ll always go back to?
+            </p>
+          </div>
+        </section>
       </main>
+
+      <aside className="right-rail">
+        <div className="rail-card rail-image-card">
+          <div className="rail-title-row">
+            <h3>Song of the Day</h3>
+          </div>
+
+          <div className="mini-rail-cover">
+            <button className="rail-play" aria-label="Play song of the day">▶</button>
+          </div>
+
+          <div className="song-meta">
+            <h4>A Sky Full of Stars</h4>
+            <span>Coldplay</span>
+          </div>
+
+          <p>Look at the stars, look how they shine for you.</p>
+
+          <div className="rail-actions">
+            <button>♡</button>
+            <button>◌</button>
+            <button>＋</button>
+          </div>
+        </div>
+
+        <div className="rail-card">
+          <h3>Book of the Day</h3>
+          <div className="book-day-row">
+            <div className="book-day-cover" />
+            <div className="book-day-copy">
+              <h4>The Alchemist</h4>
+              <span>Paulo Coelho</span>
+            </div>
+          </div>
+
+          <p>“When you want something, all the universe conspires in helping you to achieve it.”</p>
+
+          <div className="rail-actions">
+            <button>◌</button>
+            <button>♡</button>
+            <button>＋</button>
+          </div>
+        </div>
+
+        <div id="discover" className="rail-card">
+          <h3>Trending Thoughts</h3>
+          <p className="trend-quote">“Some songs are not just heard, they are lived.”</p>
+          <span className="trend-author">— Unknown</span>
+
+          <div className="trend-actions">
+            <button>♡ 256</button>
+            <button>↻ 32</button>
+            <Link href="/discover">↗ Discover</Link>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }
