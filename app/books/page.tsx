@@ -6,6 +6,24 @@ const books = [
   { title: "Atomic Habits", author: "James Clear", mood: "Growth" },
   { title: "The Alchemist", author: "Paulo Coelho", mood: "Inspiring" },
   { title: "The Psychology of Money", author: "Morgan Housel", mood: "Finance" },
+  {
+    title: "Musafir Cafe",
+    author: "Musafir Cafe Collection",
+    mood: "Featured",
+    href: "/Musafir cafe.pdf",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    action: "Open PDF",
+  },
+  {
+    title: "October Junction",
+    author: "Musafir Cafe Library",
+    mood: "New",
+    href: "/October Junction.pdf",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    action: "Read now",
+  },
 ];
 
 const navItems = [
@@ -35,13 +53,23 @@ export default function BooksPage() {
           <h2>Recommended reads</h2>
           <div className="book-list">
             {books.map((book) => (
-              <div key={book.title} className="book-item">
-                <div>
+              <a
+                key={book.title}
+                href={book.href || "#"}
+                target={book.target}
+                rel={book.rel}
+                className="book-item book-item-link"
+                style={{ textDecoration: "none" }}
+              >
+                <div className="book-copy">
                   <strong>{book.title}</strong>
                   <div className="book-meta-line">{book.author}</div>
                 </div>
-                <span className="book-badge">{book.mood}</span>
-              </div>
+                <div className="book-actions">
+                  <span className="book-badge">{book.mood}</span>
+                  {book.href ? <span className="book-open">{book.action || "Open"}</span> : null}
+                </div>
+              </a>
             ))}
           </div>
         </section>
