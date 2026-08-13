@@ -30,26 +30,39 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const shellRef = useRef<HTMLDivElement | null>(null);
 
+  const closeMenu = () => setMobileMenuOpen(false);
+  const toggleMenu = () => setMobileMenuOpen((open) => !open);
+
   useEffect(() => {
     if (!mobileMenuOpen) {
       return;
     }
 
-    function handlePointerDown(event: MouseEvent) {
+    function handleDocumentClick(event: MouseEvent) {
       if (!shellRef.current) {
         return;
       }
 
       const target = event.target;
-      if (target instanceof Node && !shellRef.current.contains(target)) {
-        setMobileMenuOpen(false);
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      const sidebar = shellRef.current.querySelector(".sidebar");
+      const toggle = shellRef.current.querySelector(".mobile-menu-toggle");
+
+      const clickedSidebar = sidebar?.contains(target);
+      const clickedToggle = toggle?.contains(target);
+
+      if (!clickedSidebar && !clickedToggle) {
+        closeMenu();
       }
     }
 
-    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("click", handleDocumentClick);
 
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("click", handleDocumentClick);
     };
   }, [mobileMenuOpen]);
 
@@ -78,7 +91,7 @@ export default function Home() {
               key={item.label}
               href={item.href}
               className={index === 0 ? "nav-item active" : "nav-item"}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={closeMenu}
             >
               <span className="nav-icon">
                 {index === 0 ? "⌂" : index === 1 ? "♫" : index === 2 ? "📖" : index === 3 ? "✎" : "◌"}
@@ -116,7 +129,7 @@ export default function Home() {
             className="mobile-menu-toggle"
             aria-label="Toggle menu"
             aria-expanded={mobileMenuOpen}
-            onClick={() => setMobileMenuOpen((open) => !open)}
+            onClick={toggleMenu}
           >
             <span />
             <span />
