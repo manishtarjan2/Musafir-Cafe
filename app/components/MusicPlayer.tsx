@@ -1,209 +1,60 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import type { Song } from "@/lib/songs";
+import { useMusic } from "@/app/context/MusicContext";
 
-interface MusicPlayerProps {
-  songs: Song[];
-}
+export default function MusicPlayer() {
+  const {
+    songs,
+    currentSong,
+    isPlaying,
+    currentTime,
+    duration,
+    activeTab,
+    customPlaylistIds,
+    searchQuery,
+    loading,
+    setSearchQuery,
+    setActiveTab,
+    togglePlay,
+    playNext,
+    playPrev,
+    toggleCustomPlaylist,
+    handleProgressChange,
+    handleSongClick,
+    formatTime,
+  } = useMusic();
 
-export default function MusicPlayer({ songs }: MusicPlayerProps) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
-  const audioCtxRef = useRef<AudioContext | null>(null);
+  if (loading) {
+    return <div className="text-center p-12 text-lg font-medium text-slate-500 animate-pulse">Loading your music library...</div>;
+  }
 
-  // New states for Playlist feature
-  const [activeTab, setActiveTab] = useState<"all" | "custom">("all");
-  const [customPlaylistIds, setCustomPlaylistIds] = useState<string[]>([]);
-  const [isClient, setIsClient] = useState(false);
-
-  // Load custom playlist from localStorage on mount
-  useEffect(() => {
-    setIsClient(true);
-    const saved = localStorage.getItem("musafir-custom-playlist");
-    if (saved) {
-      try {
-        setCustomPlaylistIds(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse saved playlist", e);
-      }
-    }
-  }, []);
-
-  // Save custom playlist to localStorage when it changes
-  useEffect(() => {
-    if (isClient) {
-      localStorage.setItem("musafir-custom-playlist", JSON.stringify(customPlaylistIds));
-    }
-  }, [customPlaylistIds, isClient]);
-
-  const toggleCustomPlaylist = (e: React.MouseEvent, songId: string) => {
-    e.stopPropagation();
-    setCustomPlaylistIds((prev) => 
-      prev.includes(songId) ? prev.filter((id) => id !== songId) : [...prev, songId]
-    );
-  };
+  if (songs.length === 0) {
+    return <div className="text-center p-12 text-lg text-slate-500">No songs available.</div>;
+  }
 
   const currentPlayableSongs = activeTab === "all" ? songs : songs.filter(s => customPlaylistIds.includes(s.id));
-  
-  // Make sure currentIndex is valid for custom playlist
-  const validCurrentIndex = activeTab === "custom" && currentPlayableSongs.length === 0 ? -1 : (currentIndex % (currentPlayableSongs.length || 1));
-  const currentSong = currentPlayableSongs.length > 0 ? currentPlayableSongs[validCurrentIndex] : null;
-
   const filteredSongs = currentPlayableSongs.filter((song) =>
     song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     song.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const initAudioCtx = () => {
-    if (!audioCtxRef.current && audioRef.current) {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioContext();
-      const track = ctx.createMediaElementSource(audioRef.current);
-      
-      // Fixed: Removed aggressive gain and bass boost for pure, fine sound.
-      // Directly connect to destination for untampered high quality HTML5 audio playback.
-      track.connect(ctx.destination);
-      audioCtxRef.current = ctx;
-    }
-    
-    if (audioCtxRef.current?.state === 'suspended') {
-      audioCtxRef.current.resume();
-    }
-  };
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      initAudioCtx();
-      audio.play().catch(() => {
-        // Autoplay blocked or other error
-      });
-    } else {
-      audio.pause();
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => setDuration(audio.duration);
-    const handleEnded = () => {
-      playNext();
-    };
-
-    audio.addEventListener("timeupdate", updateTime);
-    audio.addEventListener("loadedmetadata", updateDuration);
-    audio.addEventListener("ended", handleEnded);
-
-    return () => {
-      audio.removeEventListener("timeupdate", updateTime);
-      audio.removeEventListener("loadedmetadata", updateDuration);
-      audio.removeEventListener("ended", handleEnded);
-    };
-  }, [validCurrentIndex, currentPlayableSongs.length]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.src = currentSong?.url || "";
-      audioRef.current.load();
-      if (isPlaying && currentSong) {
-        initAudioCtx();
-        audioRef.current.play().catch(() => { });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validCurrentIndex, activeTab]);
-
-  useEffect(() => {
-    if ("mediaSession" in navigator && currentSong) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentSong.title,
-        artist: currentSong.artist,
-        album: "Musafir Cafe",
-      });
-
-      navigator.mediaSession.setActionHandler("play", () => {
-        setIsPlaying(true);
-      });
-      navigator.mediaSession.setActionHandler("pause", () => {
-        setIsPlaying(false);
-      });
-      navigator.mediaSession.setActionHandler("previoustrack", () => {
-        setCurrentIndex((prev) => (prev - 1 + currentPlayableSongs.length) % Math.max(1, currentPlayableSongs.length));
-        setIsPlaying(true);
-      });
-      navigator.mediaSession.setActionHandler("nexttrack", () => {
-        setCurrentIndex((prev) => (prev + 1) % Math.max(1, currentPlayableSongs.length));
-        setIsPlaying(true);
-      });
-    }
-  }, [currentSong, currentPlayableSongs.length]);
-
-  const playNext = () => {
-    if (currentPlayableSongs.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % currentPlayableSongs.length);
-    setIsPlaying(true);
-  };
-
-  const playPrev = () => {
-    if (currentPlayableSongs.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + currentPlayableSongs.length) % currentPlayableSongs.length);
-    setIsPlaying(true);
-  };
-
-  const togglePlay = () => {
-    if (!currentSong) return;
-    if (!isPlaying) {
-      initAudioCtx();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value);
-    setCurrentTime(newTime);
-    if (audioRef.current) {
-      audioRef.current.currentTime = newTime;
-    }
-  };
-
-  const formatTime = (time: number) => {
-    if (!time || isNaN(time)) return "0:00";
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-  };
-
-  const handleSongClick = (song: Song) => {
-    const index = currentPlayableSongs.findIndex(s => s.id === song.id);
-    if (index !== -1) {
-      setCurrentIndex(index);
-      setIsPlaying(true);
-    }
-  };
-
   return (
     <div className="flex flex-col gap-8 p-8 rounded-2xl text-white bg-gradient-to-br from-indigo-500 to-purple-700 max-md:rounded-none max-md:min-h-[calc(100vh-80px)] max-md:p-4 max-md:gap-6">
-      <audio ref={audioRef} />
-
+      
       {/* Now Playing Section */}
       <div className="flex flex-col gap-8 p-8 rounded-2xl bg-white/10 backdrop-blur-md max-md:p-6">
-        <div className="flex gap-8 items-center max-md:flex-col max-md:text-center">
+        <div className="flex gap-8 items-center max-md:flex-col max-md:text-center overflow-hidden">
           <div className="w-32 h-32 md:w-32 md:h-32 max-md:w-36 max-md:h-36 bg-gradient-to-br from-purple-600 to-indigo-500 rounded-xl flex items-center justify-center text-5xl shrink-0 shadow-lg">
             <div className={isPlaying ? "animate-pulse" : ""}>♪</div>
           </div>
-          <div className="flex-1">
-            <h2 className="m-0 text-3xl max-md:text-2xl font-bold break-words">{currentSong?.title || "No song selected"}</h2>
-            <p className="mt-2 text-base text-white/90">{currentSong?.artist || "Select a song from the playlist below"}</p>
+          <div className="flex-1 min-w-0 w-full">
+            {/* Added truncate block to fix title overflowing the screen on mobile */}
+            <h2 className="m-0 text-3xl max-md:text-2xl font-bold truncate block w-full" title={currentSong?.title || "No song selected"}>
+              {currentSong?.title || "No song selected"}
+            </h2>
+            <p className="mt-2 text-base text-white/90 truncate block w-full" title={currentSong?.artist || "Select a song"}>
+              {currentSong?.artist || "Select a song from the playlist below"}
+            </p>
           </div>
         </div>
 
@@ -260,13 +111,13 @@ export default function MusicPlayer({ songs }: MusicPlayerProps) {
           </h3>
           <div className="flex bg-white/10 p-1 rounded-xl">
             <button 
-              onClick={() => { setActiveTab("all"); setCurrentIndex(0); setIsPlaying(false); }}
+              onClick={() => setActiveTab("all")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all border-none cursor-pointer ${activeTab === "all" ? "bg-white text-indigo-600 shadow-sm" : "bg-transparent text-white hover:bg-white/10"}`}
             >
               Library
             </button>
             <button 
-              onClick={() => { setActiveTab("custom"); setCurrentIndex(0); setIsPlaying(false); }}
+              onClick={() => setActiveTab("custom")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all border-none cursor-pointer ${activeTab === "custom" ? "bg-white text-indigo-600 shadow-sm" : "bg-transparent text-white hover:bg-white/10"}`}
             >
               My Playlist
@@ -298,19 +149,19 @@ export default function MusicPlayer({ songs }: MusicPlayerProps) {
                 >
                   <div className="min-w-[30px] text-center font-bold opacity-70">{index + 1}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-[0.95rem] whitespace-nowrap overflow-hidden text-ellipsis">
+                    <div className="font-semibold text-[0.95rem] truncate block w-full">
                       {song.title}
                     </div>
-                    <div className="text-[0.85rem] opacity-80 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <div className="text-[0.85rem] opacity-80 truncate block w-full">
                       {song.artist}
                     </div>
                   </div>
                   {currentSong?.id === song.id && (
-                    <div className="text-xl animate-bounce">🎵</div>
+                    <div className="text-xl animate-bounce shrink-0">🎵</div>
                   )}
                   <button 
                     onClick={(e) => toggleCustomPlaylist(e, song.id)}
-                    className={`ml-2 p-2 rounded-full border-none cursor-pointer transition-colors ${inPlaylist ? 'bg-red-500/80 text-white hover:bg-red-500' : 'bg-white/20 text-white hover:bg-white/40'}`}
+                    className={`ml-2 p-2 rounded-full border-none shrink-0 cursor-pointer transition-colors ${inPlaylist ? 'bg-red-500/80 text-white hover:bg-red-500' : 'bg-white/20 text-white hover:bg-white/40'}`}
                     title={inPlaylist ? "Remove from Playlist" : "Add to Playlist"}
                   >
                     {inPlaylist ? "❤️" : "🤍"}

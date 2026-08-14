@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import MusicPlayer from "@/app/components/MusicPlayer";
-import type { Song } from "@/lib/songs";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -14,25 +12,6 @@ const navItems = [
 ];
 
 export default function MusicPage() {
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadSongs() {
-      try {
-        const response = await fetch("/api/songs", { cache: "no-store" });
-        const data = await response.json();
-        setSongs(data.songs ?? []);
-      } catch (error) {
-        console.error("Failed to load songs:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadSongs();
-  }, []);
-
   return (
     <div className="page-shell">
       <header className="page-header">
@@ -47,17 +26,7 @@ export default function MusicPage() {
       </header>
 
       <main className="p-8 max-md:p-0">
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "2rem" }}>
-            <p>Loading your music library...</p>
-          </div>
-        ) : songs.length > 0 ? (
-          <MusicPlayer songs={songs} />
-        ) : (
-          <div style={{ textAlign: "center", padding: "2rem" }}>
-            <p>No songs available. Please add some songs!</p>
-          </div>
-        )}
+        <MusicPlayer />
       </main>
     </div>
   );
