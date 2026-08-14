@@ -15,6 +15,7 @@ test("new songs can be added", () => {
     artist: "The Lanterns",
     duration: "3:41",
     mood: "Warm",
+    playlist: "Chill Vibes",
   });
 
   assert.equal(created.title, "Midnight Café");

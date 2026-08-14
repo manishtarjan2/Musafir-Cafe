@@ -283,7 +283,7 @@ export default function MusicPlayer() {
                 onClick={(e) => {
                   const bounds = e.currentTarget.getBoundingClientRect();
                   const percent = (e.clientX - bounds.left) / bounds.width;
-                  handleProgressChange(percent);
+                  handleProgressChange({ target: { value: String(percent * duration) } } as any);
                 }}
               >
                 <div 
