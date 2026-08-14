@@ -14,10 +14,12 @@ interface MusicContextType {
   activeTab: "all" | "custom";
   customPlaylistIds: string[];
   searchQuery: string;
+  currentPlaylist: string;
   loading: boolean;
   
   // Setters
   setSearchQuery: (query: string) => void;
+  setCurrentPlaylist: (playlist: string) => void;
   setActiveTab: (tab: "all" | "custom") => void;
   setCurrentIndex: (index: number) => void;
   
@@ -29,6 +31,14 @@ interface MusicContextType {
   handleProgressChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSongClick: (song: Song) => void;
   formatTime: (time: number) => string;
+  isFullScreen: boolean;
+  setIsFullScreen: (val: boolean) => void;
+  fullScreenTheme: string;
+  setFullScreenTheme: (val: string) => void;
+  isShuffle: boolean;
+  toggleShuffle: () => void;
+  volume: number;
+  handleVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -60,8 +70,13 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPlaylist, setCurrentPlaylist] = useState("All Songs");
   const [activeTab, setActiveTab] = useState<"all" | "custom">("all");
   const [customPlaylistIds, setCustomPlaylistIds] = useState<string[]>([]);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [fullScreenTheme, setFullScreenTheme] = useState("salon"); // 'salon', 'truck', 'nostalgia'
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [volume, setVolume] = useState(1);
   
   const pathname = usePathname();
 
@@ -132,7 +147,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   }, []); 
 
-  const currentPlayableSongs = activeTab === "all" ? songs : songs.filter(s => customPlaylistIds.includes(s.id));
+  const playlistFilteredSongs = currentPlaylist === "All Songs" ? songs : songs.filter(s => s.playlist === currentPlaylist);
+  const currentPlayableSongs = activeTab === "all" ? playlistFilteredSongs : songs.filter(s => customPlaylistIds.includes(s.id));
   const validCurrentIndex = activeTab === "custom" && currentPlayableSongs.length === 0 ? -1 : (currentIndex % (currentPlayableSongs.length || 1));
   const currentSong = currentPlayableSongs.length > 0 ? currentPlayableSongs[validCurrentIndex] : null;
 
@@ -207,7 +223,12 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const playNext = () => {
     if (currentPlayableSongs.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % currentPlayableSongs.length);
+    if (isShuffle) {
+      const randomIndex = Math.floor(Math.random() * currentPlayableSongs.length);
+      setCurrentIndex(randomIndex);
+    } else {
+      setCurrentIndex((prev) => (prev + 1) % currentPlayableSongs.length);
+    }
     setIsPlaying(true);
   };
 
@@ -229,6 +250,18 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     if (audioRef.current) {
       audioRef.current.currentTime = newTime;
     }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVol = parseFloat(e.target.value);
+    setVolume(newVol);
+    if (audioRef.current) {
+      audioRef.current.volume = newVol;
+    }
+  };
+
+  const toggleShuffle = () => {
+    setIsShuffle(!isShuffle);
   };
 
   const handleSongClick = (song: Song) => {
@@ -256,8 +289,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     activeTab,
     customPlaylistIds,
     searchQuery,
+    currentPlaylist,
     loading,
     setSearchQuery,
+    setCurrentPlaylist,
     setActiveTab,
     setCurrentIndex,
     togglePlay,
@@ -267,36 +302,19 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     handleProgressChange,
     handleSongClick,
     formatTime,
+    isFullScreen,
+    setIsFullScreen,
+    fullScreenTheme,
+    setFullScreenTheme,
+    isShuffle,
+    toggleShuffle,
+    volume,
+    handleVolumeChange,
   };
-
-  // MiniPlayer logic
-  const isMusicPage = pathname === "/music";
 
   return (
     <MusicContext.Provider value={value}>
       {children}
-      
-      {/* Global Mini-Player when NOT on music page */}
-      {!isMusicPage && currentSong && (
-        <div className="fixed bottom-0 left-0 right-0 bg-indigo-900 text-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.2)] z-50 flex items-center justify-between gap-4 border-t border-indigo-700/50 backdrop-blur-md bg-opacity-95" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
-          <div className="flex flex-col min-w-0 flex-1 overflow-hidden pr-2">
-            <span className="font-bold text-sm truncate block w-full whitespace-nowrap overflow-hidden text-ellipsis">{currentSong.title}</span>
-            <span className="text-xs text-indigo-200 truncate block w-full whitespace-nowrap overflow-hidden text-ellipsis">{currentSong.artist}</span>
-          </div>
-          
-          <div className="flex items-center gap-4 shrink-0">
-            <button onClick={playPrev} className="text-xl p-1 rounded-full hover:text-indigo-200 transition-colors">
-              ⏮️
-            </button>
-            <button onClick={togglePlay} className="w-10 h-10 flex items-center justify-center bg-white text-indigo-900 rounded-full hover:scale-105 transition-all shadow-md text-sm font-bold">
-              {isPlaying ? "⏸️" : "▶️"}
-            </button>
-            <button onClick={playNext} className="text-xl p-1 rounded-full hover:text-indigo-200 transition-colors">
-              ⏭️
-            </button>
-          </div>
-        </div>
-      )}
     </MusicContext.Provider>
   );
 }

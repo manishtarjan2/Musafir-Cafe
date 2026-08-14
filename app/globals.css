@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-:root {
+:root, .theme-dark {
   --page-bg: #0b090c;
   --panel-bg: #130f12;
   --panel-alt: rgba(31, 24, 21, 0.9);
@@ -12,6 +12,34 @@
   --button: rgba(255, 255, 255, 0.06);
   --button-strong: rgba(255, 255, 255, 0.12);
   --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  
+  --shell-bg: rgba(17, 13, 14, 0.82);
+  --sidebar-bg: rgba(18, 13, 13, 0.95);
+  --main-bg: linear-gradient(180deg, rgba(19, 15, 16, 0.96), rgba(18, 13, 13, 0.92));
+  --rail-bg: rgba(14, 11, 12, 0.8);
+  --card-bg: rgba(255, 255, 255, 0.02);
+  --card-hover: rgba(255, 255, 255, 0.04);
+}
+
+.theme-light {
+  --page-bg: #f9f6f0;
+  --panel-bg: #ffffff;
+  --panel-alt: rgba(255, 255, 255, 0.9);
+  --primary: #c28742;
+  --soft-gold: #9d6b38;
+  --soft-text: #2a201b;
+  --muted: rgba(42, 32, 27, 0.6);
+  --line: rgba(42, 32, 27, 0.15);
+  --button: rgba(42, 32, 27, 0.06);
+  --button-strong: rgba(42, 32, 27, 0.12);
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+  
+  --shell-bg: rgba(255, 255, 255, 0.6);
+  --sidebar-bg: rgba(255, 255, 255, 0.95);
+  --main-bg: #fdfcf9;
+  --rail-bg: rgba(250, 248, 245, 0.9);
+  --card-bg: #ffffff;
+  --card-hover: #f0ece6;
 }
 
 * {
@@ -27,7 +55,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   font-family: var(--font-sans), sans-serif;
-  background: radial-gradient(circle at top, rgba(120, 76, 53, 0.32), transparent 20%), var(--page-bg);
+  background: var(--page-bg);
   color: var(--soft-text);
 }
 
@@ -49,22 +77,41 @@ img {
 .musafir-shell {
   display: grid;
   grid-template-columns: 260px minmax(0, 1.4fr) 320px;
+  grid-template-rows: 1fr auto;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   margin: 0;
-  background: rgba(17, 13, 14, 0.82);
+  background: var(--shell-bg);
   border: none;
   border-radius: 0;
   box-shadow: none;
   overflow: hidden;
 }
 
+.musafir-shell.no-rail {
+  grid-template-columns: 260px 1fr;
+}
+
+.bottom-player {
+  grid-column: 1 / -1;
+  background: var(--panel-bg);
+  border-top: 1px solid var(--line);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  z-index: 50;
+  height: 90px;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
   padding: 22px 18px 14px;
-  background: rgba(18, 13, 13, 0.95);
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--line);
+  overflow-y: auto;
 }
 
 .brand-block {
@@ -254,7 +301,8 @@ img {
 
 .main-panel {
   padding: 18px 18px 12px;
-  background: linear-gradient(180deg, rgba(19, 15, 16, 0.96), rgba(18, 13, 13, 0.92));
+  background: var(--main-bg);
+  overflow-y: auto;
 }
 
 .topbar {
@@ -428,7 +476,7 @@ img {
 .music-card {
   border-radius: 16px;
   overflow: hidden;
-  background: rgba(255,255,255,0.02);
+  background: var(--card-bg);
   border: 1px solid var(--line);
 }
 
@@ -663,7 +711,7 @@ img {
   padding: 18px 18px 12px;
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: rgba(255,255,255,0.02);
+  background: var(--card-bg);
 }
 
 .thought-author-row {
@@ -706,22 +754,24 @@ img {
   flex-direction: column;
   gap: 18px;
   padding: 18px 16px 16px;
-  background: rgba(14, 11, 12, 0.8);
+  background: var(--rail-bg);
   border-left: 1px solid var(--line);
+  overflow-y: auto;
 }
 
 .rail-card {
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: rgba(255,255,255,0.02);
+  background: var(--card-bg);
   padding: 18px 14px 14px;
 }
 
 .rail-card h3 {
   margin: 0 0 14px;
   font-size: 1.1rem;
-  font-weight: 700;
-  color: #f8ead9;
+  font-weight: 500;
+  color: var(--soft-text);
+  font-style: italic;
 }
 
 .rail-image-card {
@@ -775,7 +825,7 @@ img {
 
 .rail-card p {
   margin: 12px 0 0;
-  color: rgba(244, 230, 215, 0.88);
+  color: var(--soft-text);
   line-height: 1.6;
 }
 
@@ -1363,4 +1413,34 @@ img {
   .trend-actions {
     flex-wrap: wrap;
   }
+}
+
+/* Full Screen Player Themes & Animations */
+@keyframes spin-vinyl {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.playing {
+  animation-play-state: running !important;
+}
+
+.paused {
+  animation-play-state: paused !important;
+}
+
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+@keyframes audio-bar {
+  0% { transform: scaleY(0.2); }
+  50% { transform: scaleY(1); }
+  100% { transform: scaleY(0.2); }
+}
+
+.audio-bar {
+  animation: audio-bar 1s ease-in-out infinite;
+  transform-origin: bottom;
 }

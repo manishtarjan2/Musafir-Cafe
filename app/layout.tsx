@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "./context/ThemeContext";
 import { MusicProvider } from "./context/MusicContext";
+import ShellLayout from "./components/ShellLayout";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -21,9 +23,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${cormorant.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <MusicProvider>{children}</MusicProvider>
+    <html lang="en" className={`${inter.variable} ${cormorant.variable} h-full antialiased suppressHydrationWarning`}>
+      <body className="min-h-full flex flex-col m-0 p-0">
+        <ThemeProvider>
+          <MusicProvider>
+            <ShellLayout>{children}</ShellLayout>
+          </MusicProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
