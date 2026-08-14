@@ -14,6 +14,33 @@ export default function MusicPlayer({ songs }: MusicPlayerProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const initAudioCtx = () => {
+    if (!audioCtxRef.current && audioRef.current) {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioContext();
+      const track = ctx.createMediaElementSource(audioRef.current);
+      
+      const gainNode = ctx.createGain();
+      gainNode.gain.value = 1.2; // Loud sound
+
+      const bassNode = ctx.createBiquadFilter();
+      bassNode.type = "lowshelf";
+      bassNode.frequency.value = 150; // Bass frequency
+      bassNode.gain.value = 5; // Boost bass by 5dB
+
+      track.connect(bassNode);
+      bassNode.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      audioCtxRef.current = ctx;
+    }
+    
+    if (audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+  };
 
   const currentSong = songs[currentIndex];
   const filteredSongs = songs.filter((song) =>
@@ -26,6 +53,7 @@ export default function MusicPlayer({ songs }: MusicPlayerProps) {
     if (!audio) return;
 
     if (isPlaying) {
+      initAudioCtx();
       audio.play().catch(() => {
         // Autoplay blocked or other error
       });
@@ -58,8 +86,39 @@ export default function MusicPlayer({ songs }: MusicPlayerProps) {
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.src = currentSong?.url || "";
+      audioRef.current.load();
+      if (isPlaying) {
+        initAudioCtx();
+        audioRef.current.play().catch(() => { });
+      }
     }
-  }, [currentSong]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex]);
+
+  useEffect(() => {
+    if ("mediaSession" in navigator && currentSong) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentSong.title,
+        artist: currentSong.artist,
+        album: "Musafir Cafe",
+      });
+
+      navigator.mediaSession.setActionHandler("play", () => {
+        setIsPlaying(true);
+      });
+      navigator.mediaSession.setActionHandler("pause", () => {
+        setIsPlaying(false);
+      });
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
+        setCurrentIndex((prev) => (prev - 1 + songs.length) % songs.length);
+        setIsPlaying(true);
+      });
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        setCurrentIndex((prev) => (prev + 1) % songs.length);
+        setIsPlaying(true);
+      });
+    }
+  }, [currentSong, songs.length]);
 
   const playNext = () => {
     setCurrentIndex((prev) => (prev + 1) % songs.length);
@@ -72,6 +131,9 @@ export default function MusicPlayer({ songs }: MusicPlayerProps) {
   };
 
   const togglePlay = () => {
+    if (!isPlaying) {
+      initAudioCtx();
+    }
     setIsPlaying(!isPlaying);
   };
 
@@ -91,44 +153,56 @@ export default function MusicPlayer({ songs }: MusicPlayerProps) {
   };
 
   return (
-    <div className="music-player-container">
+    <div className="flex flex-col gap-8 p-8 rounded-2xl text-white bg-gradient-to-br from-indigo-500 to-purple-700 max-md:fixed max-md:inset-0 max-md:w-screen max-md:h-screen max-md:z-50 max-md:rounded-none max-md:m-0 max-md:overflow-y-auto max-md:p-6">
       <audio ref={audioRef} />
 
       {/* Now Playing Section */}
-      <div className="now-playing">
-        <div className="player-card">
-          <div className="album-cover">
-            <div className="cover-placeholder">♪</div>
+      <div className="flex flex-col gap-8 p-8 rounded-2xl bg-white/10 backdrop-blur-md max-md:p-6">
+        <div className="flex gap-8 items-center max-md:flex-col max-md:text-center">
+          <div className="w-32 h-32 md:w-32 md:h-32 max-md:w-36 max-md:h-36 bg-gradient-to-br from-purple-600 to-indigo-500 rounded-xl flex items-center justify-center text-5xl shrink-0 shadow-lg">
+            <div className="animate-pulse">♪</div>
           </div>
-          <div className="song-info">
-            <h2>{currentSong?.title || "No song selected"}</h2>
-            <p>{currentSong?.artist || "Unknown Artist"}</p>
+          <div className="flex-1">
+            <h2 className="m-0 text-3xl max-md:text-2xl font-bold break-words">{currentSong?.title || "No song selected"}</h2>
+            <p className="mt-2 text-base text-white/90">{currentSong?.artist || "Unknown Artist"}</p>
           </div>
         </div>
 
         {/* Player Controls */}
-        <div className="player-controls">
-          <div className="progress-container">
-            <span className="time">{formatTime(currentTime)}</span>
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm min-w-[40px] text-right">{formatTime(currentTime)}</span>
             <input
               type="range"
               min="0"
               max={duration || 0}
               value={currentTime}
               onChange={handleProgressChange}
-              className="progress-bar"
+              className="flex-1 h-1.5 appearance-none bg-white/30 rounded-full outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md cursor-pointer"
             />
-            <span className="time">{formatTime(duration)}</span>
+            <span className="text-sm min-w-[40px]">{formatTime(duration)}</span>
           </div>
 
-          <div className="button-group">
-            <button onClick={playPrev} className="control-btn" title="Previous">
+          <div className="flex gap-4 justify-center flex-wrap max-md:gap-2">
+            <button
+              onClick={playPrev}
+              className="px-6 py-3 border-none rounded-full bg-white/20 text-white cursor-pointer text-base font-semibold transition-all hover:bg-white/30 hover:scale-105 border-2 border-white/30 max-md:flex-1 max-md:min-w-[70px]"
+              title="Previous"
+            >
               ⏮️ Prev
             </button>
-            <button onClick={togglePlay} className="control-btn play-btn" title={isPlaying ? "Pause" : "Play"}>
+            <button
+              onClick={togglePlay}
+              className="px-8 py-3 border-none rounded-full bg-white text-indigo-500 cursor-pointer text-lg font-semibold transition-all hover:bg-white/90 shadow-lg hover:shadow-xl max-md:flex-1 max-md:min-w-[100px]"
+              title={isPlaying ? "Pause" : "Play"}
+            >
               {isPlaying ? "⏸️ Pause" : "▶️ Play"}
             </button>
-            <button onClick={playNext} className="control-btn" title="Next">
+            <button
+              onClick={playNext}
+              className="px-6 py-3 border-none rounded-full bg-white/20 text-white cursor-pointer text-base font-semibold transition-all hover:bg-white/30 hover:scale-105 border-2 border-white/30 max-md:flex-1 max-md:min-w-[70px]"
+              title="Next"
+            >
               Next ⏭️
             </button>
           </div>
@@ -136,356 +210,50 @@ export default function MusicPlayer({ songs }: MusicPlayerProps) {
       </div>
 
       {/* Playlist */}
-      <div className="playlist-section">
-        <h3>Playlist ({filteredSongs.length} songs)</h3>
+      <div className="flex flex-col gap-6">
+        <h3 className="m-0 text-2xl font-bold">Playlist ({filteredSongs.length} songs)</h3>
 
-        <div className="search-box">
+        <div className="flex">
           <input
             type="text"
             placeholder="🔍 Search songs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
+            className="flex-1 px-4 py-3 border-none rounded-xl bg-white/90 text-gray-800 text-base outline-none transition-all focus:bg-white focus:shadow-md placeholder-gray-500"
           />
         </div>
 
-        <div className="songs-grid">
+        <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2 max-md:max-h-none max-md:pb-8 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/10 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/30 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/50">
           {filteredSongs.length > 0 ? (
             filteredSongs.map((song, index) => (
               <div
                 key={song.id}
-                className={`song-card ${currentSong?.id === song.id ? "active" : ""}`}
+                className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all border-2 border-transparent hover:bg-white/20 hover:translate-x-1 ${currentSong?.id === song.id ? "bg-white/25 border-white" : "bg-white/10"
+                  }`}
                 onClick={() => {
                   setCurrentIndex(songs.indexOf(song));
                   setIsPlaying(true);
                 }}
               >
-                <div className="song-number">{index + 1}</div>
-                <div className="song-details">
-                  <div className="title">{song.title}</div>
-                  <div className="artist">{song.artist}</div>
+                <div className="min-w-[30px] text-center font-bold opacity-70">{index + 1}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-[0.95rem] whitespace-nowrap overflow-hidden text-ellipsis">
+                    {song.title}
+                  </div>
+                  <div className="text-[0.85rem] opacity-80 whitespace-nowrap overflow-hidden text-ellipsis">
+                    {song.artist}
+                  </div>
                 </div>
                 {currentSong?.id === song.id && (
-                  <div className="playing-indicator">🎵</div>
+                  <div className="text-xl animate-bounce">🎵</div>
                 )}
               </div>
             ))
           ) : (
-            <div className="no-results">No songs found</div>
+            <div className="text-center p-8 opacity-70 text-base">No songs found</div>
           )}
         </div>
       </div>
-
-      <style jsx>{`
-        .music-player-container {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-          padding: 2rem;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 20px;
-          color: white;
-        }
-
-        .now-playing {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-          background: rgba(255, 255, 255, 0.1);
-          padding: 2rem;
-          border-radius: 15px;
-          backdrop-filter: blur(10px);
-        }
-
-        .player-card {
-          display: flex;
-          gap: 2rem;
-          align-items: center;
-        }
-
-        .album-cover {
-          width: 120px;
-          height: 120px;
-          background: linear-gradient(135deg, #764ba2, #667eea);
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 48px;
-          flex-shrink: 0;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-
-        .cover-placeholder {
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-
-        .song-info {
-          flex: 1;
-        }
-
-        .song-info h2 {
-          margin: 0;
-          font-size: 1.8rem;
-          font-weight: bold;
-          word-break: break-word;
-        }
-
-        .song-info p {
-          margin: 0.5rem 0 0 0;
-          font-size: 1rem;
-          opacity: 0.9;
-        }
-
-        .player-controls {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .progress-container {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .time {
-          font-size: 0.9rem;
-          min-width: 40px;
-        }
-
-        .progress-bar {
-          flex: 1;
-          height: 6px;
-          -webkit-appearance: none;
-          appearance: none;
-          background: rgba(255, 255, 255, 0.3);
-          border-radius: 3px;
-          outline: none;
-        }
-
-        .progress-bar::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background: white;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .progress-bar::-moz-range-thumb {
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background: white;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .button-group {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-        }
-
-        .control-btn {
-          padding: 0.75rem 1.5rem;
-          border: none;
-          border-radius: 25px;
-          background: rgba(255, 255, 255, 0.2);
-          color: white;
-          cursor: pointer;
-          font-size: 1rem;
-          font-weight: 600;
-          transition: all 0.3s ease;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .control-btn:hover {
-          background: rgba(255, 255, 255, 0.3);
-          transform: scale(1.05);
-        }
-
-        .play-btn {
-          background: white;
-          color: #667eea;
-          padding: 0.75rem 2rem;
-          font-size: 1.1rem;
-        }
-
-        .play-btn:hover {
-          background: rgba(255, 255, 255, 0.9);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        }
-
-        .playlist-section {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .playlist-section h3 {
-          margin: 0;
-          font-size: 1.5rem;
-          font-weight: bold;
-        }
-
-        .search-box {
-          display: flex;
-        }
-
-        .search-input {
-          flex: 1;
-          padding: 0.75rem 1rem;
-          border: none;
-          border-radius: 10px;
-          background: rgba(255, 255, 255, 0.9);
-          font-size: 1rem;
-          outline: none;
-          transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-          background: white;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .songs-grid {
-          display: grid;
-          gap: 0.75rem;
-          max-height: 400px;
-          overflow-y: auto;
-          padding-right: 0.5rem;
-        }
-
-        .song-card {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          border: 2px solid transparent;
-        }
-
-        .song-card:hover {
-          background: rgba(255, 255, 255, 0.2);
-          transform: translateX(4px);
-        }
-
-        .song-card.active {
-          background: rgba(255, 255, 255, 0.25);
-          border-color: white;
-        }
-
-        .song-number {
-          min-width: 30px;
-          text-align: center;
-          font-weight: bold;
-          opacity: 0.7;
-        }
-
-        .song-details {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .title {
-          font-weight: 600;
-          font-size: 0.95rem;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .artist {
-          font-size: 0.85rem;
-          opacity: 0.8;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .playing-indicator {
-          font-size: 1.2rem;
-          animation: bounce 1s infinite;
-        }
-
-        @keyframes bounce {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.2); }
-        }
-
-        .no-results {
-          text-align: center;
-          padding: 2rem;
-          opacity: 0.7;
-          font-size: 1rem;
-        }
-
-        /* Scrollbar styling */
-        .songs-grid::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .songs-grid::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-        }
-
-        .songs-grid::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.3);
-          border-radius: 10px;
-        }
-
-        .songs-grid::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.5);
-        }
-
-        @media (max-width: 768px) {
-          .music-player-container {
-            padding: 1rem;
-            gap: 1.5rem;
-          }
-
-          .player-card {
-            flex-direction: column;
-            text-align: center;
-          }
-
-          .album-cover {
-            width: 100px;
-            height: 100px;
-          }
-
-          .song-info h2 {
-            font-size: 1.4rem;
-          }
-
-          .button-group {
-            flex-wrap: wrap;
-          }
-
-          .control-btn {
-            flex: 1;
-            min-width: 80px;
-          }
-
-          .songs-grid {
-            max-height: 300px;
-          }
-        }
-      `}</style>
     </div>
   );
 }
