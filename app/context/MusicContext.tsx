@@ -148,7 +148,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     if (audioRef.current) {
       const isSrcDifferent = !audioRef.current.src.endsWith(encodeURI(currentSong?.url || "xyz-none"));
       if (isSrcDifferent && currentSong) {
-        audioRef.current.src = currentSong.url;
+        audioRef.current.src = currentSong.url || "";
         audioRef.current.load();
         if (isPlaying) {
           initAudioCtx();
