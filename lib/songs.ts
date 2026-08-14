@@ -4,6 +4,7 @@ export type Song = {
   artist: string;
   duration: string;
   mood: string;
+  playlist: string;
   cover?: string;
   url?: string;
 };
@@ -125,12 +126,22 @@ const allSongs = [
   "Zindagi_Ke_Safar_Mein(0)",
 ];
 
+const playlists = [
+  "Morning Bliss",
+  "Bollywood Romance",
+  "Chill Vibes",
+  "Workout Energy",
+  "Rainy Day Feels",
+  "Lo-fi Beats",
+];
+
 const seedSongs: Song[] = allSongs.map((filename, index) => ({
   id: `song-${index}`,
   title: sanitizeTitle(filename),
   artist: "Various Artists",
   duration: "3:45",
   mood: "Calm",
+  playlist: playlists[index % playlists.length],
   url: `/music/songs/${filename}.mp3`,
 }));
 
