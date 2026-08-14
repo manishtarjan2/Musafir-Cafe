@@ -1,4 +1,5 @@
 import Link from "next/link";
+import GlobalHeader from "@/app/components/GlobalHeader";
 
 const books = [
   { title: "The Silent Patient", author: "Alex Michaelides", mood: "Thriller", color: "from-slate-700 to-slate-900", textColor: "text-white" },
@@ -40,27 +41,10 @@ const books = [
   },
 ];
 
-const navItems = [
-  { label: "Home", href: "/" },
-  { label: "Music", href: "/music" },
-  { label: "Books", href: "/books" },
-  { label: "Thoughts", href: "/thoughts" },
-  { label: "Discover", href: "/discover" },
-];
-
 export default function BooksPage() {
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-800 font-sans">
-      <header className="flex justify-between items-center p-8 bg-white shadow-sm border-b border-gray-100 sticky top-0 z-10 max-md:flex-col max-md:gap-4 max-md:p-4">
-        <h1 className="text-2xl font-bold m-0 text-slate-900 flex items-center gap-2">📚 Cafe Shelf</h1>
-        <nav className="flex gap-6 font-medium text-sm text-slate-500 max-md:flex-wrap max-md:justify-center">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="no-underline text-inherit hover:text-indigo-600 transition-colors">
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
+    <div className="min-h-screen bg-gray-50 text-slate-800 font-sans pb-24">
+      <GlobalHeader title="📚 Cafe Shelf" />
 
       <main className="max-w-7xl mx-auto p-8 max-md:p-4 grid grid-cols-1 lg:grid-cols-4 gap-8">
         <section className="lg:col-span-3">

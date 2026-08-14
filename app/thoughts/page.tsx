@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import GlobalHeader from "@/app/components/GlobalHeader";
 
 const initialThoughts = [
   {
@@ -46,14 +47,6 @@ const colors = [
   { color: "from-purple-50 to-fuchsia-100", accent: "text-fuchsia-600" }
 ];
 
-const navItems = [
-  { label: "Home", href: "/" },
-  { label: "Music", href: "/music" },
-  { label: "Books", href: "/books" },
-  { label: "Thoughts", href: "/thoughts" },
-  { label: "Discover", href: "/discover" },
-];
-
 export default function ThoughtsPage() {
   const [thoughts, setThoughts] = useState(initialThoughts);
   const [newThought, setNewThought] = useState("");
@@ -80,17 +73,8 @@ export default function ThoughtsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-800 font-sans">
-      <header className="flex justify-between items-center p-8 bg-white shadow-sm border-b border-gray-100 sticky top-0 z-10 max-md:flex-col max-md:gap-4 max-md:p-4">
-        <h1 className="text-2xl font-bold m-0 text-slate-900 flex items-center gap-2">💭 Cafe Thoughts</h1>
-        <nav className="flex gap-6 font-medium text-sm text-slate-500 max-md:flex-wrap max-md:justify-center">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="no-underline text-inherit hover:text-indigo-600 transition-colors">
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
+    <div className="min-h-screen bg-gray-50 text-slate-800 font-sans pb-24">
+      <GlobalHeader title="💭 Cafe Thoughts" />
 
       <main className="max-w-7xl mx-auto p-8 max-md:p-4 grid grid-cols-1 lg:grid-cols-4 gap-8">
         <section className="lg:col-span-3">
