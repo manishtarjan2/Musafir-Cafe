@@ -47,12 +47,12 @@ export default function MusicPlayer() {
           <div className="w-32 h-32 md:w-32 md:h-32 max-md:w-36 max-md:h-36 bg-gradient-to-br from-purple-600 to-indigo-500 rounded-xl flex items-center justify-center text-5xl shrink-0 shadow-lg">
             <div className={isPlaying ? "animate-pulse" : ""}>♪</div>
           </div>
-          <div className="flex-1 min-w-0 w-full">
+          <div className="flex-1 min-w-0 w-full overflow-hidden">
             {/* Added truncate block to fix title overflowing the screen on mobile */}
-            <h2 className="m-0 text-3xl max-md:text-2xl font-bold truncate block w-full" title={currentSong?.title || "No song selected"}>
+            <h2 className="m-0 text-3xl max-md:text-xl font-bold truncate block w-full whitespace-nowrap overflow-hidden text-ellipsis" title={currentSong?.title || "No song selected"}>
               {currentSong?.title || "No song selected"}
             </h2>
-            <p className="mt-2 text-base text-white/90 truncate block w-full" title={currentSong?.artist || "Select a song"}>
+            <p className="mt-2 text-base max-md:text-sm text-white/90 truncate block w-full whitespace-nowrap overflow-hidden text-ellipsis" title={currentSong?.artist || "Select a song"}>
               {currentSong?.artist || "Select a song from the playlist below"}
             </p>
           </div>
@@ -148,11 +148,11 @@ export default function MusicPlayer() {
                   onClick={() => handleSongClick(song)}
                 >
                   <div className="min-w-[30px] text-center font-bold opacity-70">{index + 1}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-[0.95rem] truncate block w-full">
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <div className="font-semibold text-[0.95rem] truncate block w-full whitespace-nowrap overflow-hidden text-ellipsis">
                       {song.title}
                     </div>
-                    <div className="text-[0.85rem] opacity-80 truncate block w-full">
+                    <div className="text-[0.85rem] opacity-80 truncate block w-full whitespace-nowrap overflow-hidden text-ellipsis">
                       {song.artist}
                     </div>
                   </div>

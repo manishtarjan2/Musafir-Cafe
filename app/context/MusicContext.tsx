@@ -279,9 +279,9 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       {/* Global Mini-Player when NOT on music page */}
       {!isMusicPage && currentSong && (
         <div className="fixed bottom-0 left-0 right-0 bg-indigo-900 text-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.2)] z-50 flex items-center justify-between gap-4 border-t border-indigo-700/50 backdrop-blur-md bg-opacity-95" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
-          <div className="flex flex-col min-w-0 flex-1">
-            <span className="font-bold text-sm truncate block w-full">{currentSong.title}</span>
-            <span className="text-xs text-indigo-200 truncate block w-full">{currentSong.artist}</span>
+          <div className="flex flex-col min-w-0 flex-1 overflow-hidden pr-2">
+            <span className="font-bold text-sm truncate block w-full whitespace-nowrap overflow-hidden text-ellipsis">{currentSong.title}</span>
+            <span className="text-xs text-indigo-200 truncate block w-full whitespace-nowrap overflow-hidden text-ellipsis">{currentSong.artist}</span>
           </div>
           
           <div className="flex items-center gap-4 shrink-0">

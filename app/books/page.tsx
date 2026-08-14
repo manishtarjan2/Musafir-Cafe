@@ -59,7 +59,7 @@ export default function BooksPage() {
           </div>
           
           {/* Books Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8" style={{ perspective: "1000px" }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-md:gap-4" style={{ perspective: "1000px" }}>
             {books.map((book) => {
               const bookContent = (
                 <div className={`relative w-full aspect-[2/3] rounded-r-xl rounded-l-md shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-rotate-1 hover:translate-y-[-5px] group bg-gradient-to-br ${book.color} flex flex-col p-6 border-l-8 border-black/20`}>
@@ -75,8 +75,8 @@ export default function BooksPage() {
                     </div>
                     
                     <div className="mt-auto">
-                      <h3 className={`text-2xl font-bold leading-tight mb-2 ${book.textColor}`}>{book.title}</h3>
-                      <p className={`text-sm opacity-90 font-medium m-0 ${book.textColor}`}>{book.author}</p>
+                      <h3 className={`text-xl max-md:text-base font-bold leading-tight mb-1 ${book.textColor}`}>{book.title}</h3>
+                      <p className={`text-xs max-md:text-[10px] opacity-90 font-medium m-0 ${book.textColor}`}>{book.author}</p>
                     </div>
                   </div>
 
