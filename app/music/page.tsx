@@ -46,7 +46,7 @@ export default function MusicPage() {
         </nav>
       </header>
 
-      <main style={{ padding: "2rem" }}>
+      <main className="p-8 max-md:p-0">
         {loading ? (
           <div style={{ textAlign: "center", padding: "2rem" }}>
             <p>Loading your music library...</p>
