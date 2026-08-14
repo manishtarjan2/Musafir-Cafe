@@ -4,7 +4,17 @@ const books = [
   { title: "The Silent Patient", author: "Alex Michaelides", mood: "Thriller", color: "from-slate-700 to-slate-900", textColor: "text-white" },
   { title: "Ikigai", author: "Héctor García", mood: "Mindful", color: "from-rose-100 to-teal-100", textColor: "text-slate-800" },
   { title: "Atomic Habits", author: "James Clear", mood: "Growth", color: "from-amber-400 to-orange-500", textColor: "text-white" },
-  { title: "The Alchemist", author: "Paulo Coelho", mood: "Inspiring", color: "from-yellow-200 to-yellow-500", textColor: "text-slate-900" },
+  { 
+    title: "The Alchemist", 
+    author: "Paulo Coelho", 
+    mood: "Inspiring", 
+    href: "/The Alchemist.pdf",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    action: "Read now",
+    color: "from-yellow-200 to-yellow-500", 
+    textColor: "text-slate-900" 
+  },
   { title: "The Psychology of Money", author: "Morgan Housel", mood: "Finance", color: "from-green-600 to-emerald-800", textColor: "text-white" },
   {
     title: "Musafir Cafe",
