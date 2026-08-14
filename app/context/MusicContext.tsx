@@ -36,6 +36,21 @@ const MusicContext = createContext<MusicContextType | undefined>(undefined);
 export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Cookie utilities
+  const setCookie = (name: string, value: string, days = 365) => {
+    if (typeof document === "undefined") return;
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${date.toUTCString()};path=/;samesite=lax`;
+  };
+
+  const getCookie = (name: string) => {
+    if (typeof document === "undefined") return null;
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    if (match) return decodeURIComponent(match[2]);
+    return null;
+  };
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -66,21 +81,32 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     loadSongs();
   }, []);
 
-  // Load custom playlist
+  // Load session from cookies
   useEffect(() => {
-    const saved = localStorage.getItem("musafir-custom-playlist");
-    if (saved) {
+    const savedPlaylist = getCookie("musafir-session-playlist");
+    if (savedPlaylist) {
       try {
-        setCustomPlaylistIds(JSON.parse(saved));
+        setCustomPlaylistIds(JSON.parse(savedPlaylist));
       } catch (e) {}
+    }
+    
+    const savedTab = getCookie("musafir-session-tab");
+    if (savedTab === "all" || savedTab === "custom") {
+      setActiveTab(savedTab);
     }
   }, []);
 
+  // Save playlist to session cookie
   useEffect(() => {
-    if (customPlaylistIds.length > 0 || localStorage.getItem("musafir-custom-playlist")) {
-      localStorage.setItem("musafir-custom-playlist", JSON.stringify(customPlaylistIds));
+    if (customPlaylistIds.length > 0 || getCookie("musafir-session-playlist")) {
+      setCookie("musafir-session-playlist", JSON.stringify(customPlaylistIds));
     }
   }, [customPlaylistIds]);
+
+  // Save active tab to session cookie
+  useEffect(() => {
+    setCookie("musafir-session-tab", activeTab);
+  }, [activeTab]);
 
   // Create audio element globally
   useEffect(() => {
