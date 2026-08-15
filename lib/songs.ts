@@ -7,8 +7,6 @@ export type Song = {
   playlist: string;
   cover?: string;
   url?: string;
-  provider?: "jamendo" | "youtube" | "spotify" | "cloudinary";
-  providerId?: string;
 };
 
 // Generate songs from filename
@@ -137,86 +135,20 @@ const playlists = [
   "Lo-fi Beats",
 ];
 
-const seedSongs: Song[] = [
-  {
-    id: "song-fallback-1",
-    title: "Midnight Café",
-    artist: "The Lanterns",
-    duration: "3:41",
-    mood: "Calm",
-    playlist: playlists[0],
-    url: "/music/songs/Aaila_Re__From__Jung__(0).mp3",
-  }
-];
+const seedSongs: Song[] = allSongs.map((filename, index) => ({
+  id: `song-${index}`,
+  title: sanitizeTitle(filename),
+  artist: "Various Artists",
+  duration: "3:45",
+  mood: "Calm",
+  playlist: playlists[index % playlists.length],
+  url: `/music/songs/${filename}.mp3`,
+}));
 
-let songsCache: Song[] | null = null;
-
-export async function getSongsAsync(): Promise<Song[]> {
-  if (songsCache) return songsCache;
-  
-  try {
-    const res = await fetch("https://api.jamendo.com/v3.0/tracks/?client_id=56d30c95&format=jsonpretty&limit=50&hasimage=true&audioformat=mp32", { next: { revalidate: 3600 } });
-    if (!res.ok) throw new Error("Failed to fetch");
-    const data = await res.json();
-    
-    if (!data.results || data.results.length === 0) throw new Error("No results");
-
-    songsCache = data.results.map((track: any, index: number) => {
-      const duration = parseInt(track.duration, 10) || 180;
-      const minutes = Math.floor(duration / 60);
-      const seconds = Math.floor(duration % 60);
-      return {
-        id: track.id,
-        title: track.name,
-        artist: track.artist_name,
-        duration: `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`,
-        mood: "Chill",
-        playlist: playlists[index % playlists.length],
-        cover: track.image,
-        url: track.audio,
-        provider: "jamendo",
-        providerId: track.id
-      };
-    });
-
-    // Add some YouTube dummy tracks for testing
-    if (songsCache) {
-      songsCache.unshift(
-        {
-          id: "yt-1",
-          title: "Lofi Hip Hop Radio - Beats to Relax/Study to",
-          artist: "Lofi Girl",
-          duration: "0:00",
-          mood: "Chill",
-          playlist: "Lo-fi Beats",
-          cover: "https://img.youtube.com/vi/jfKfPfyJRdk/maxresdefault.jpg",
-          provider: "youtube",
-          providerId: "jfKfPfyJRdk"
-        },
-        {
-          id: "yt-2",
-          title: "Synthwave Radio - Beats to Chill/Game to",
-          artist: "Lofi Girl",
-          duration: "0:00",
-          mood: "Energy",
-          playlist: "Chill Vibes",
-          cover: "https://img.youtube.com/vi/4xDzrJKXOOY/maxresdefault.jpg",
-          provider: "youtube",
-          providerId: "4xDzrJKXOOY"
-        }
-      );
-    }
-    
-    return songsCache!;
-  } catch (e) {
-    console.error("Jamendo fetch failed", e);
-    if (!songsCache) songsCache = [...seedSongs];
-    return songsCache;
-  }
-}
+let songs: Song[] = [...seedSongs];
 
 export function getSongs() {
-  return songsCache || [...seedSongs];
+  return [...songs];
 }
 
 export function addSong(song: Omit<Song, "id"> & { id?: string }): Song {
@@ -225,10 +157,6 @@ export function addSong(song: Omit<Song, "id"> & { id?: string }): Song {
     id: song.id ?? `song-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
   };
 
-  if (songsCache) {
-    songsCache = [newSong, ...songsCache];
-  } else {
-    songsCache = [newSong, ...seedSongs];
-  }
+  songs = [newSong, ...songs];
   return newSong;
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import YouTube from "react-youtube";
 import { usePathname } from "next/navigation";
 import type { Song } from "@/lib/songs";
 
@@ -40,7 +39,6 @@ interface MusicContextType {
   toggleShuffle: () => void;
   volume: number;
   handleVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  addSongToContext: (song: Song) => void;
 }
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -66,7 +64,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const ytPlayerRef = useRef<any>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -178,55 +175,30 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const pauseAll = () => {
-    audioRef.current?.pause();
-    ytPlayerRef.current?.pauseVideo();
-  };
-
-  const playCurrent = () => {
-    if (!currentSong) return;
-    if (currentSong.provider === "youtube") {
-      audioRef.current?.pause();
-      ytPlayerRef.current?.playVideo();
-    } else {
-      ytPlayerRef.current?.pauseVideo();
-      initAudioCtx();
-      audioRef.current?.play().catch(() => { setIsPlaying(false); });
-    }
-  };
-
   useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
     if (isPlaying) {
-      playCurrent();
+      initAudioCtx();
+      audio.play().catch(() => { setIsPlaying(false); });
     } else {
-      pauseAll();
+      audio.pause();
     }
-  }, [isPlaying, currentSong?.id]); // Play/pause when state or song changes
+  }, [isPlaying]);
 
   useEffect(() => {
-    if (currentSong && currentSong.provider !== "youtube") {
-      if (audioRef.current && currentSong.url) {
-        const isSrcDifferent = !audioRef.current.src.endsWith(encodeURI(currentSong.url));
-        if (isSrcDifferent) {
-          audioRef.current.src = currentSong.url;
-          audioRef.current.load();
+    if (audioRef.current) {
+      const isSrcDifferent = !audioRef.current.src.endsWith(encodeURI(currentSong?.url || "xyz-none"));
+      if (isSrcDifferent && currentSong) {
+        audioRef.current.src = currentSong.url || "";
+        audioRef.current.load();
+        if (isPlaying) {
+          initAudioCtx();
+          audioRef.current.play().catch(() => { setIsPlaying(false); });
         }
       }
     }
-  }, [currentSong?.id]);
-
-  useEffect(() => {
-    let interval: any;
-    if (isPlaying && currentSong?.provider === "youtube") {
-      interval = setInterval(() => {
-        if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
-          setCurrentTime(ytPlayerRef.current.getCurrentTime() || 0);
-          setDuration(ytPlayerRef.current.getDuration() || 0);
-        }
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentSong]);
+  }, [currentSong?.url, isPlaying]); // Track URL changes directly
 
   useEffect(() => {
     if ("mediaSession" in navigator && currentSong) {
@@ -268,15 +240,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const togglePlay = () => {
     if (!currentSong) return;
+    if (!isPlaying) initAudioCtx();
     setIsPlaying(!isPlaying);
   };
 
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = parseFloat(e.target.value);
     setCurrentTime(newTime);
-    if (currentSong?.provider === "youtube") {
-      ytPlayerRef.current?.seekTo(newTime, true);
-    } else if (audioRef.current) {
+    if (audioRef.current) {
       audioRef.current.currentTime = newTime;
     }
   };
@@ -284,9 +255,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVol = parseFloat(e.target.value);
     setVolume(newVol);
-    if (ytPlayerRef.current && typeof ytPlayerRef.current.setVolume === 'function') {
-      ytPlayerRef.current.setVolume(newVol * 100);
-    }
     if (audioRef.current) {
       audioRef.current.volume = newVol;
     }
@@ -342,28 +310,11 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     toggleShuffle,
     volume,
     handleVolumeChange,
-    addSongToContext: (song: Song) => setSongs(prev => [song, ...prev]),
   };
 
   return (
     <MusicContext.Provider value={value}>
       {children}
-      <div style={{ display: 'none' }}>
-        <YouTube
-          videoId={currentSong?.provider === "youtube" ? currentSong.providerId : undefined}
-          opts={{ height: '0', width: '0', playerVars: { autoplay: isPlaying ? 1 : 0, controls: 0 } }}
-          onReady={(e) => { 
-            ytPlayerRef.current = e.target; 
-            ytPlayerRef.current.setVolume(volume * 100);
-            if (isPlaying && currentSong?.provider === "youtube") {
-              ytPlayerRef.current.playVideo();
-            }
-          }}
-          onStateChange={(e) => {
-            if (e.data === 0) playNext(); // YT.PlayerState.ENDED
-          }}
-        />
-      </div>
     </MusicContext.Provider>
   );
 }
