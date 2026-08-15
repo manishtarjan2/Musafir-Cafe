@@ -135,20 +135,56 @@ const playlists = [
   "Lo-fi Beats",
 ];
 
-const seedSongs: Song[] = allSongs.map((filename, index) => ({
-  id: `song-${index}`,
-  title: sanitizeTitle(filename),
-  artist: "Various Artists",
-  duration: "3:45",
-  mood: "Calm",
-  playlist: playlists[index % playlists.length],
-  url: `/music/songs/${filename}.mp3`,
-}));
+const seedSongs: Song[] = [
+  {
+    id: "song-fallback-1",
+    title: "Midnight Café",
+    artist: "The Lanterns",
+    duration: "3:41",
+    mood: "Calm",
+    playlist: playlists[0],
+    url: "/music/songs/Aaila_Re__From__Jung__(0).mp3",
+  }
+];
 
-let songs: Song[] = [...seedSongs];
+let songsCache: Song[] | null = null;
+
+export async function getSongsAsync(): Promise<Song[]> {
+  if (songsCache) return songsCache;
+  
+  try {
+    const res = await fetch("https://api.jamendo.com/v3.0/tracks/?client_id=56d30c95&format=jsonpretty&limit=50&hasimage=true&audioformat=mp32", { next: { revalidate: 3600 } });
+    if (!res.ok) throw new Error("Failed to fetch");
+    const data = await res.json();
+    
+    if (!data.results || data.results.length === 0) throw new Error("No results");
+
+    songsCache = data.results.map((track: any, index: number) => {
+      const duration = parseInt(track.duration, 10) || 180;
+      const minutes = Math.floor(duration / 60);
+      const seconds = Math.floor(duration % 60);
+      return {
+        id: track.id,
+        title: track.name,
+        artist: track.artist_name,
+        duration: `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`,
+        mood: "Chill",
+        playlist: playlists[index % playlists.length],
+        cover: track.image,
+        url: track.audio
+      };
+    });
+    
+    return songsCache!;
+  } catch (e) {
+    console.error("Jamendo fetch failed", e);
+    if (!songsCache) songsCache = [...seedSongs];
+    return songsCache;
+  }
+}
 
 export function getSongs() {
-  return [...songs];
+  return songsCache || [...seedSongs];
 }
 
 export function addSong(song: Omit<Song, "id"> & { id?: string }): Song {
@@ -157,6 +193,10 @@ export function addSong(song: Omit<Song, "id"> & { id?: string }): Song {
     id: song.id ?? `song-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
   };
 
-  songs = [newSong, ...songs];
+  if (songsCache) {
+    songsCache = [newSong, ...songsCache];
+  } else {
+    songsCache = [newSong, ...seedSongs];
+  }
   return newSong;
 }

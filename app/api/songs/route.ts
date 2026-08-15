@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { addSong, getSongs } from "@/lib/songs";
+import { addSong, getSongsAsync } from "@/lib/songs";
 
 export async function GET() {
-  return NextResponse.json({ songs: getSongs() });
+  const songs = await getSongsAsync();
+  return NextResponse.json({ songs });
 }
 
 export async function POST(request: Request) {
