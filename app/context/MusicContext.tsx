@@ -40,6 +40,7 @@ interface MusicContextType {
   toggleShuffle: () => void;
   volume: number;
   handleVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  addSongToContext: (song: Song) => void;
 }
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -341,6 +342,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     toggleShuffle,
     volume,
     handleVolumeChange,
+    addSongToContext: (song: Song) => setSongs(prev => [song, ...prev]),
   };
 
   return (

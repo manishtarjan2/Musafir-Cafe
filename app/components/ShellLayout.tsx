@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/app/context/ThemeContext";
 import { useMusic } from "@/app/context/MusicContext";
 import FullScreenPlayer from "./FullScreenPlayer";
+import UploadModal from "./UploadModal";
 
 const navItems = [
   { label: "Home", href: "/" },
@@ -24,6 +25,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
     setIsFullScreen, volume, handleVolumeChange, isShuffle, toggleShuffle 
   } = useMusic();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const shellRef = useRef<HTMLDivElement | null>(null);
 
   const closeMenu = () => setMobileMenuOpen(false);
@@ -108,6 +110,13 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           </div>
 
           <div className="user-meta">
+            <button 
+              className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-full text-[11px] text-white/80 hover:bg-white/10 flex items-center gap-1.5 cursor-pointer"
+              onClick={() => setUploadModalOpen(true)}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              Upload
+            </button>
             <button 
               className="bell" 
               onClick={toggleTheme} 
@@ -219,6 +228,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
       )}
 
       <FullScreenPlayer />
+      <UploadModal isOpen={uploadModalOpen} onClose={() => setUploadModalOpen(false)} />
     </div>
   );
 }
