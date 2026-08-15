@@ -7,6 +7,8 @@ export type Song = {
   playlist: string;
   cover?: string;
   url?: string;
+  provider?: "jamendo" | "youtube" | "spotify" | "cloudinary";
+  providerId?: string;
 };
 
 // Generate songs from filename
@@ -171,9 +173,39 @@ export async function getSongsAsync(): Promise<Song[]> {
         mood: "Chill",
         playlist: playlists[index % playlists.length],
         cover: track.image,
-        url: track.audio
+        url: track.audio,
+        provider: "jamendo",
+        providerId: track.id
       };
     });
+
+    // Add some YouTube dummy tracks for testing
+    if (songsCache) {
+      songsCache.unshift(
+        {
+          id: "yt-1",
+          title: "Lofi Hip Hop Radio - Beats to Relax/Study to",
+          artist: "Lofi Girl",
+          duration: "0:00",
+          mood: "Chill",
+          playlist: "Lo-fi Beats",
+          cover: "https://img.youtube.com/vi/jfKfPfyJRdk/maxresdefault.jpg",
+          provider: "youtube",
+          providerId: "jfKfPfyJRdk"
+        },
+        {
+          id: "yt-2",
+          title: "Synthwave Radio - Beats to Chill/Game to",
+          artist: "Lofi Girl",
+          duration: "0:00",
+          mood: "Energy",
+          playlist: "Chill Vibes",
+          cover: "https://img.youtube.com/vi/4xDzrJKXOOY/maxresdefault.jpg",
+          provider: "youtube",
+          providerId: "4xDzrJKXOOY"
+        }
+      );
+    }
     
     return songsCache!;
   } catch (e) {
