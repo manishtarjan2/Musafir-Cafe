@@ -158,7 +158,7 @@ export default function FullScreenPlayer() {
             className="flex-1 h-2 md:h-2.5 bg-white/10 rounded-full relative cursor-pointer group" 
             onClick={(e) => { 
               const bounds = e.currentTarget.getBoundingClientRect(); 
-              handleProgressChange({ target: { value: (e.clientX - bounds.left) / bounds.width * duration } } as any); 
+              handleProgressChange({ target: { value: String((e.clientX - bounds.left) / bounds.width * duration) } } as unknown as React.ChangeEvent<HTMLInputElement>); 
             }}
           >
             <div 

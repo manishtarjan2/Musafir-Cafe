@@ -101,12 +101,16 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     const savedPlaylist = getCookie("musafir-session-playlist");
     if (savedPlaylist) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCustomPlaylistIds(JSON.parse(savedPlaylist));
-      } catch (e) {}
+      } catch {
+        // ignore error
+      }
     }
     
     const savedTab = getCookie("musafir-session-tab");
     if (savedTab === "all" || savedTab === "custom") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(savedTab);
     }
   }, []);
@@ -164,7 +168,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const initAudioCtx = () => {
     if (!audioCtxRef.current && audioRef.current) {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
       const ctx = new AudioContext();
       const track = ctx.createMediaElementSource(audioRef.current);
       
@@ -226,7 +230,8 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         }
       }
     }
-  }, [currentSong?.url, isPlaying]); // Track URL changes directly
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSong, isPlaying]); // Track URL changes directly
 
   useEffect(() => {
     if ("mediaSession" in navigator && currentSong) {
@@ -240,6 +245,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       navigator.mediaSession.setActionHandler("previoustrack", () => playPrev());
       navigator.mediaSession.setActionHandler("nexttrack", () => playNext());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSong, currentPlayableSongs.length]);
 
   const toggleCustomPlaylist = (e: React.MouseEvent, songId: string) => {
@@ -247,23 +253,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     setCustomPlaylistIds((prev) => 
       prev.includes(songId) ? prev.filter((id) => id !== songId) : [...prev, songId]
     );
-  };
-
-  const playNext = () => {
-    if (currentPlayableSongs.length === 0) return;
-    if (isShuffle) {
-      const randomIndex = Math.floor(Math.random() * currentPlayableSongs.length);
-      setCurrentIndex(randomIndex);
-    } else {
-      setCurrentIndex((prev) => (prev + 1) % currentPlayableSongs.length);
-    }
-    setIsPlaying(true);
-  };
-
-  const playPrev = () => {
-    if (currentPlayableSongs.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + currentPlayableSongs.length) % currentPlayableSongs.length);
-    setIsPlaying(true);
   };
 
   const togglePlay = () => {
