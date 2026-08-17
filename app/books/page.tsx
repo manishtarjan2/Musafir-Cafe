@@ -5,21 +5,21 @@ import { useState, useRef } from "react";
 
 /* ── Book Data ── */
 const books = [
-  { title: "The Alchemist", author: "Paulo Coelho", genre: "Inspiring", progress: 43, color: "from-yellow-200 to-yellow-500", textColor: "text-slate-900", href: "/The Alchemist.pdf", action: "Read now" },
-  { title: "The Silent Patient", author: "Alex Michaelides", genre: "Thriller", progress: 28, color: "from-slate-700 to-slate-900", textColor: "text-white" },
-  { title: "Atomic Habits", author: "James Clear", genre: "Self Help", progress: 67, color: "from-amber-400 to-orange-500", textColor: "text-white" },
-  { title: "Ikigai", author: "Héctor García", genre: "Mindful", progress: 15, color: "from-rose-100 to-teal-100", textColor: "text-slate-800" },
-  { title: "The Psychology of Money", author: "Morgan Housel", genre: "Finance", progress: 0, color: "from-green-600 to-emerald-800", textColor: "text-white" },
-  { title: "Musafir Cafe", author: "Musafir Cafe Collection", genre: "Featured", progress: 0, color: "from-indigo-500 to-purple-700", textColor: "text-white", href: "/Musafir cafe.pdf", action: "Open PDF" },
-  { title: "October Junction", author: "Musafir Cafe Library", genre: "New", progress: 0, color: "from-red-500 to-rose-700", textColor: "text-white", href: "/October Junction.pdf", action: "Read now" },
+  { title: "The Alchemist", author: "Paulo Coelho", genre: "Inspiring", progress: 43, color: "from-yellow-200 to-yellow-500", textColor: "text-slate-900", href: "/The Alchemist.pdf", action: "Read now", pairing: "Lo-Fi Beats & Hot Chai", vibe: "Perfect for a sunny morning" },
+  { title: "The Silent Patient", author: "Alex Michaelides", genre: "Thriller", progress: 28, color: "from-slate-700 to-slate-900", textColor: "text-white", pairing: "Dark Ambient & Black Coffee", vibe: "Late night edge-of-seat read" },
+  { title: "Atomic Habits", author: "James Clear", genre: "Self Help", progress: 67, color: "from-amber-400 to-orange-500", textColor: "text-white", pairing: "Upbeat Jazz & Matcha", vibe: "A quick 15-min daily read" },
+  { title: "Ikigai", author: "Héctor García", genre: "Mindful", progress: 15, color: "from-rose-100 to-teal-100", textColor: "text-slate-800", pairing: "Nature Sounds & Green Tea", vibe: "Relaxing Sunday afternoon" },
+  { title: "The Psychology of Money", author: "Morgan Housel", genre: "Finance", progress: 0, color: "from-green-600 to-emerald-800", textColor: "text-white", pairing: "Acoustic Guitar & Espresso", vibe: "Insightful commute reading" },
+  { title: "Musafir Cafe", author: "Musafir Cafe Collection", genre: "Featured", progress: 0, color: "from-indigo-500 to-purple-700", textColor: "text-white", href: "/Musafir cafe.pdf", action: "Open PDF", pairing: "Indie Folk & Cappuccino", vibe: "Warm rainy day comfort" },
+  { title: "October Junction", author: "Musafir Cafe Library", genre: "New", progress: 0, color: "from-red-500 to-rose-700", textColor: "text-white", href: "/October Junction.pdf", action: "Read now", pairing: "Soft Piano & Hot Chocolate", vibe: "Cozy winter evening" },
 ];
 
 const popularBooks = [
-  { title: "The Psychology of Money", author: "Morgan Housel", genre: "Finance", color: "from-green-600 to-emerald-800", textColor: "text-white" },
-  { title: "The Silent Patient", author: "Alex Michaelides", genre: "Thriller", color: "from-slate-700 to-slate-900", textColor: "text-white" },
-  { title: "Atomic Habits", author: "James Clear", genre: "Self Help", color: "from-amber-400 to-orange-500", textColor: "text-white" },
-  { title: "The Alchemist", author: "Paulo Coelho", genre: "Inspiring", color: "from-yellow-200 to-yellow-500", textColor: "text-slate-900" },
-  { title: "October Junction", author: "Musafir Cafe Library", genre: "New", color: "from-red-500 to-rose-700", textColor: "text-white" },
+  { title: "The Psychology of Money", author: "Morgan Housel", genre: "Finance", color: "from-green-600 to-emerald-800", textColor: "text-white", pairing: "Acoustic Guitar & Espresso", vibe: "Insightful commute reading" },
+  { title: "The Silent Patient", author: "Alex Michaelides", genre: "Thriller", color: "from-slate-700 to-slate-900", textColor: "text-white", pairing: "Dark Ambient & Black Coffee", vibe: "Late night edge-of-seat read" },
+  { title: "Atomic Habits", author: "James Clear", genre: "Self Help", color: "from-amber-400 to-orange-500", textColor: "text-white", pairing: "Upbeat Jazz & Matcha", vibe: "A quick 15-min daily read" },
+  { title: "The Alchemist", author: "Paulo Coelho", genre: "Inspiring", color: "from-yellow-200 to-yellow-500", textColor: "text-slate-900", pairing: "Lo-Fi Beats & Hot Chai", vibe: "Perfect for a sunny morning" },
+  { title: "October Junction", author: "Musafir Cafe Library", genre: "New", color: "from-red-500 to-rose-700", textColor: "text-white", pairing: "Soft Piano & Hot Chocolate", vibe: "Cozy winter evening" },
 ];
 
 const genres = [
@@ -66,13 +66,30 @@ function BookCard({ book, showProgress = false }: { book: typeof books[0]; showP
         )}
       </div>
       {/* Meta */}
-      <div className="px-0.5">
+      <div className="px-0.5 mt-2 flex flex-col gap-1">
         <p className="m-0 text-sm font-semibold truncate" style={{ color: "var(--soft-text)" }}>{book.title}</p>
         <p className="m-0 text-xs truncate" style={{ color: "var(--muted)" }}>{book.author}</p>
+        
+        {book.pairing && (
+          <div className="mt-1 flex items-start gap-1">
+            <span className="text-[10px] leading-tight text-[#e8c284]">✨ Pairs with:</span>
+            <span className="text-[10px] leading-tight text-white/70 truncate">{book.pairing}</span>
+          </div>
+        )}
+        
+        {book.vibe && (
+          <div className="flex items-start gap-1">
+            <span className="text-[10px] leading-tight text-[#e8c284]">⏱️ Vibe:</span>
+            <span className="text-[10px] leading-tight text-white/50 truncate">{book.vibe}</span>
+          </div>
+        )}
+
         {book.genre && (
-          <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--button-strong)", color: "var(--primary)" }}>
-            {book.genre}
-          </span>
+          <div className="mt-1">
+            <span className="inline-block text-[9px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--button-strong)", color: "var(--primary)" }}>
+              {book.genre}
+            </span>
+          </div>
         )}
       </div>
     </div>
@@ -110,6 +127,8 @@ function ScrollRow({ children }: { children: React.ReactNode }) {
 
 /* ── Main Page ── */
 export default function BooksPage() {
+  const [activeAmbiance, setActiveAmbiance] = useState<string | null>(null);
+
   return (
     <div className="flex flex-col gap-10">
 
@@ -138,6 +157,39 @@ export default function BooksPage() {
               </div>
             </div>
           </div>
+
+          {/* ── Reading Ambiance ── */}
+          <section className="bg-black/20 p-5 rounded-2xl border border-white/5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div>
+                <h2 className="m-0 text-lg font-bold" style={{ color: "var(--soft-text)" }}>Reading Ambiance</h2>
+                <p className="text-xs text-white/50 m-0 mt-1">Set the mood for your reading session.</p>
+              </div>
+              <div className="flex gap-2">
+                {[
+                  { id: 'rain', icon: '🌧️', label: 'Rain' },
+                  { id: 'fire', icon: '🔥', label: 'Fireplace' },
+                  { id: 'cafe', icon: '☕', label: 'Cafe' }
+                ].map((ambiance) => (
+                  <button
+                    key={ambiance.id}
+                    onClick={() => setActiveAmbiance(activeAmbiance === ambiance.id ? null : ambiance.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all border ${activeAmbiance === ambiance.id ? 'bg-[#e8c284]/20 border-[#e8c284]/50 text-[#e8c284]' : 'bg-white/5 border-transparent text-white/60 hover:bg-white/10 hover:text-white'}`}
+                  >
+                    <span className="text-base">{ambiance.icon}</span>
+                    <span className="text-sm font-semibold">{ambiance.label}</span>
+                    {activeAmbiance === ambiance.id && (
+                      <span className="flex gap-[2px] ml-1 h-3 items-end opacity-70">
+                        <span className="w-1 bg-[#e8c284] rounded-full animate-bounce" style={{ height: '60%', animationDuration: '0.8s' }} />
+                        <span className="w-1 bg-[#e8c284] rounded-full animate-bounce" style={{ height: '100%', animationDuration: '1s' }} />
+                        <span className="w-1 bg-[#e8c284] rounded-full animate-bounce" style={{ height: '80%', animationDuration: '0.6s' }} />
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
 
           {/* ── Pick up where you left off ── */}
           <section>

@@ -19,6 +19,7 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "Musafir Cafe",
   description: "A nostalgic digital cafe for music, books, thoughts, and community.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
