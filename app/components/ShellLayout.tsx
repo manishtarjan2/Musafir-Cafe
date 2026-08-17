@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useTheme } from "@/app/context/ThemeContext";
 import { useMusic } from "@/app/context/MusicContext";
-import FullScreenPlayer from "./FullScreenPlayer";
+import { musicCards, bookCards } from "@/lib/data";
+import dynamic from "next/dynamic";
 
+const FullScreenPlayer = dynamic(() => import("./FullScreenPlayer"), {
+  ssr: false,
+});
 const navItems = [
   { label: "Home", href: "/" },
   { label: "Music", href: "/music" },
@@ -25,9 +29,34 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
   } = useMusic();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const shellRef = useRef<HTMLDivElement | null>(null);
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const [showMiniPlayer, setShowMiniPlayer] = useState(false);
+  const [isDeepFocus, setIsDeepFocus] = useState(false);
+  const miniPlayerRef = useRef<HTMLDivElement | null>(null);
 
   const closeMenu = () => setMobileMenuOpen(false);
   const toggleMenu = () => setMobileMenuOpen((open) => !open);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return { songs: [], books: [] };
+    const query = searchQuery.toLowerCase();
+    return {
+      songs: musicCards.filter((song) => song.title.toLowerCase().includes(query) || song.artist.toLowerCase().includes(query)).slice(0, 3),
+      books: bookCards.filter((book) => book.title.toLowerCase().includes(query) || book.author.toLowerCase().includes(query)).slice(0, 3)
+    };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (isDeepFocus) {
+      document.body.setAttribute('data-focus-mode', 'true');
+    } else {
+      document.body.removeAttribute('data-focus-mode');
+    }
+  }, [isDeepFocus]);
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -45,6 +74,14 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
 
       if (!clickedSidebar && !clickedToggle) {
         closeMenu();
+      }
+
+      if (searchContainerRef.current && !searchContainerRef.current.contains(target)) {
+        setIsSearchFocused(false);
+      }
+
+      if (miniPlayerRef.current && !miniPlayerRef.current.contains(target)) {
+        setShowMiniPlayer(false);
       }
     }
 
@@ -102,9 +139,58 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
             <span />
           </button>
 
-          <div className="search-box" role="search">
-            <span className="search-placeholder">Search songs, books, authors, artists, thoughts...</span>
+          <div className="search-box relative" role="search" ref={searchContainerRef}>
+            <input 
+              type="text" 
+              className="search-input w-full" 
+              placeholder="Search songs, books, authors, artists, thoughts..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+            />
             <span className="search-icon">⌕</span>
+
+            {isSearchFocused && searchQuery.trim() && (
+              <div className="search-results absolute top-[110%] left-0 right-0 p-4 rounded-xl flex flex-col gap-4 shadow-[0_16px_40px_rgba(0,0,0,0.4)] bg-[#0b090c]/90 backdrop-blur-xl border border-white/10 z-[200]">
+                {searchResults.songs.length === 0 && searchResults.books.length === 0 ? (
+                  <div className="text-white/50 text-center py-4">No results found for &quot;{searchQuery}&quot;</div>
+                ) : (
+                  <>
+                    {searchResults.songs.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <h4 className="text-white/40 text-[10px] font-semibold tracking-widest uppercase mb-1">Songs</h4>
+                        {searchResults.songs.map((song) => (
+                          <div key={song.title} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
+                            <div className="w-10 h-10 rounded-md bg-[#222] overflow-hidden shrink-0">
+                               <img src={`https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&w=100&q=80`} alt={song.title} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-white text-sm font-medium">{song.title}</span>
+                              <span className="text-[#e8b57a] text-xs">{song.artist}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {searchResults.books.length > 0 && (
+                      <div className="flex flex-col gap-2">
+                        <h4 className="text-white/40 text-[10px] font-semibold tracking-widest uppercase mb-1">Books</h4>
+                        {searchResults.books.map((book) => (
+                          <div key={book.title} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors">
+                            <div className="w-8 h-10 rounded-sm bg-[#333] shrink-0 border border-white/10" />
+                            <div className="flex flex-col">
+                              <span className="text-white text-sm font-medium">{book.title}</span>
+                              <span className="text-white/50 text-xs">{book.author}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="user-meta">
@@ -116,7 +202,42 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
             >
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
-            <button className="bell" aria-label="Notifications">◔</button>
+            <div className="relative" ref={miniPlayerRef}>
+              <button 
+                className={`bell flex items-center justify-center transition-colors ${showMiniPlayer ? 'bg-white/10' : ''}`} 
+                aria-label="Now Playing"
+                onClick={() => setShowMiniPlayer(!showMiniPlayer)}
+              >
+                <span className={`inline-block ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }}>◔</span>
+              </button>
+              
+              {showMiniPlayer && (
+                <div className="absolute top-[120%] right-0 w-[240px] p-4 rounded-xl flex flex-col gap-4 shadow-[0_16px_40px_rgba(0,0,0,0.4)] bg-[#0b090c]/90 backdrop-blur-xl border border-white/10 z-[200]">
+                  <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                    <div className={`flex items-end gap-[2px] h-[16px] shrink-0 ${!isPlaying ? 'eq-paused' : ''}`}>
+                      <div className="eq-bar" />
+                      <div className="eq-bar" />
+                      <div className="eq-bar" />
+                      <div className="eq-bar" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-white text-xs font-medium truncate">{currentSong?.title || "No song playing"}</span>
+                      <span className="text-white/50 text-[10px] truncate">{currentSong?.artist || "Pick a track"}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-white/80 font-medium">Deep Focus Mode</span>
+                    <button 
+                      onClick={() => setIsDeepFocus(!isDeepFocus)}
+                      className={`w-10 h-5 rounded-full relative transition-colors ${isDeepFocus ? 'bg-[#e8b57a]' : 'bg-white/20'}`}
+                    >
+                      <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isDeepFocus ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="user-pill">
               <div className="user-avatar">M</div>
               <span>Manish</span>

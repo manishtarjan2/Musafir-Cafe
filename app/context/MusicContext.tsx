@@ -167,7 +167,35 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContext();
       const track = ctx.createMediaElementSource(audioRef.current);
-      track.connect(ctx.destination);
+      
+      // High Quality "Apple Music" preset Audio Processing
+      
+      // 1. Bass Boost (LowShelf)
+      const bassNode = ctx.createBiquadFilter();
+      bassNode.type = "lowshelf";
+      bassNode.frequency.value = 150; // Boost below 150Hz
+      bassNode.gain.value = 3; // +3dB
+
+      // 2. Treble Boost (HighShelf)
+      const trebleNode = ctx.createBiquadFilter();
+      trebleNode.type = "highshelf";
+      trebleNode.frequency.value = 8000; // Boost above 8kHz
+      trebleNode.gain.value = 4; // +4dB for clarity/air
+
+      // 3. Dynamic Range Compressor (Fuller sound)
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -24;
+      compressor.knee.value = 30;
+      compressor.ratio.value = 12;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.25;
+
+      // Connect nodes: track -> bass -> treble -> compressor -> destination
+      track.connect(bassNode);
+      bassNode.connect(trebleNode);
+      trebleNode.connect(compressor);
+      compressor.connect(ctx.destination);
+      
       audioCtxRef.current = ctx;
     }
     if (audioCtxRef.current?.state === 'suspended') {

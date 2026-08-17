@@ -54,6 +54,24 @@ export default function MusicPlayer() {
   } = useMusic();
 
   const [chartTab, setChartTab] = useState<"songs" | "albums" | "artists">("songs");
+  const [spotifySongs, setSpotifySongs] = useState<any[]>([]);
+  const [loadingSpotify, setLoadingSpotify] = useState(false);
+
+  const loadSpotifySongs = async () => {
+    setLoadingSpotify(true);
+    try {
+      const res = await fetch('/api/spotify');
+      const data = await res.json();
+      // Spotify playlist tracks are nested in data.items[i].track
+      if (data.items) {
+        setSpotifySongs(data.items.map((item: any) => item.track).filter(Boolean));
+      }
+    } catch (e) {
+      console.error("Failed to fetch Spotify songs", e);
+    } finally {
+      setLoadingSpotify(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -174,6 +192,34 @@ export default function MusicPlayer() {
                 </div>
               ))}
             </ScrollRow>
+          </section>
+
+          {/* ── Spotify Integration ── */}
+          <section>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="m-0 text-[17px] font-semibold" style={{ color: "var(--soft-text)" }}>Spotify Top Tracks</h2>
+              <button 
+                onClick={loadSpotifySongs} 
+                disabled={loadingSpotify}
+                className="text-[12px] font-semibold border border-white/20 px-3 py-1.5 rounded-full bg-transparent cursor-pointer hover:bg-white/5 transition-colors text-white"
+              >
+                {loadingSpotify ? "Loading..." : "Load from Spotify"}
+              </button>
+            </div>
+            
+            {spotifySongs.length > 0 && (
+              <ScrollRow>
+                {spotifySongs.map((track) => (
+                  <div key={track.id} className="shrink-0 w-[140px] sm:w-[160px] group">
+                    <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-black/20">
+                      <img src={track.album?.images?.[0]?.url || "https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&w=300&q=80"} alt={track.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    </div>
+                    <p className="m-0 text-[13px] font-semibold truncate text-white">{track.name}</p>
+                    <p className="m-0 text-[11px] truncate text-white/50 mt-0.5">{track.artists?.map((a: any) => a.name).join(', ')}</p>
+                  </div>
+                ))}
+              </ScrollRow>
+            )}
           </section>
 
           {/* ── Top Charts ── */}
