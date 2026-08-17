@@ -254,6 +254,22 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       prev.includes(songId) ? prev.filter((id) => id !== songId) : [...prev, songId]
     );
   };
+  const playPrev = () => {
+    if (currentPlayableSongs.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + currentPlayableSongs.length) % currentPlayableSongs.length);
+    setIsPlaying(true);
+  };
+
+  const playNext = () => {
+    if (currentPlayableSongs.length === 0) return;
+    if (isShuffle) {
+      const randomIndex = Math.floor(Math.random() * currentPlayableSongs.length);
+      setCurrentIndex(randomIndex);
+    } else {
+      setCurrentIndex((prev) => (prev + 1) % currentPlayableSongs.length);
+    }
+    setIsPlaying(true);
+  };
 
   const togglePlay = () => {
     if (!currentSong) return;

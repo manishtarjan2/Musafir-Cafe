@@ -54,7 +54,7 @@ export default function MusicPlayer() {
   } = useMusic();
 
   const [chartTab, setChartTab] = useState<"songs" | "albums" | "artists">("songs");
-  const [spotifySongs, setSpotifySongs] = useState<unknown[]>([]);
+  const [spotifySongs, setSpotifySongs] = useState<{id: string, name: string, artists?: {name: string}[], album?: {images?: {url: string}[]}, external_urls?: {spotify: string}}[]>([]);
   const [loadingSpotify, setLoadingSpotify] = useState(false);
 
   const loadSpotifySongs = async () => {
@@ -64,7 +64,7 @@ export default function MusicPlayer() {
       const data = await res.json();
       // Spotify playlist tracks are nested in data.items[i].track
       if (data.items) {
-        setSpotifySongs(data.items.map((item: { track: unknown }) => item.track).filter(Boolean));
+        setSpotifySongs(data.items.map((item: { track: {id: string, name: string, artists?: {name: string}[], album?: {images?: {url: string}[]}, external_urls?: {spotify: string}} }) => item.track).filter(Boolean));
       }
     } catch (e) {
       console.error("Failed to fetch Spotify songs", e);
