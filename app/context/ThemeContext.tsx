@@ -18,6 +18,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Check for saved theme in localStorage
     const savedTheme = localStorage.getItem("musafir-theme") as Theme | null;
     if (savedTheme) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(savedTheme);
       document.documentElement.classList.add(`theme-${savedTheme}`);
     } else {

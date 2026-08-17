@@ -54,7 +54,7 @@ export default function MusicPlayer() {
   } = useMusic();
 
   const [chartTab, setChartTab] = useState<"songs" | "albums" | "artists">("songs");
-  const [spotifySongs, setSpotifySongs] = useState<any[]>([]);
+  const [spotifySongs, setSpotifySongs] = useState<{id: string, name: string, artists?: {name: string}[], album?: {images?: {url: string}[]}, external_urls?: {spotify: string}}[]>([]);
   const [loadingSpotify, setLoadingSpotify] = useState(false);
 
   const loadSpotifySongs = async () => {
@@ -64,7 +64,7 @@ export default function MusicPlayer() {
       const data = await res.json();
       // Spotify playlist tracks are nested in data.items[i].track
       if (data.items) {
-        setSpotifySongs(data.items.map((item: any) => item.track).filter(Boolean));
+        setSpotifySongs(data.items.map((item: { track: {id: string, name: string, artists?: {name: string}[], album?: {images?: {url: string}[]}, external_urls?: {spotify: string}} }) => item.track).filter(Boolean));
       }
     } catch (e) {
       console.error("Failed to fetch Spotify songs", e);
@@ -215,7 +215,7 @@ export default function MusicPlayer() {
                       <img src={track.album?.images?.[0]?.url || "https://images.unsplash.com/photo-1478147427282-58a87a120781?auto=format&fit=crop&w=300&q=80"} alt={track.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     </div>
                     <p className="m-0 text-[13px] font-semibold truncate text-white">{track.name}</p>
-                    <p className="m-0 text-[11px] truncate text-white/50 mt-0.5">{track.artists?.map((a: any) => a.name).join(', ')}</p>
+                    <p className="m-0 text-[11px] truncate text-white/50 mt-0.5">{track.artists?.map((a: { name: string }) => a.name).join(', ')}</p>
                   </div>
                 ))}
               </ScrollRow>
@@ -329,7 +329,7 @@ export default function MusicPlayer() {
                 onClick={(e) => {
                   const bounds = e.currentTarget.getBoundingClientRect();
                   const percent = (e.clientX - bounds.left) / bounds.width;
-                  handleProgressChange({ target: { value: String(percent * duration) } } as any);
+                  handleProgressChange({ target: { value: String(percent * duration) } } as unknown as React.ChangeEvent<HTMLInputElement>);
                 }}
               >
                 <div 

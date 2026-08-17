@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 const discoveries = [
   { title: "City lights at dusk", type: "Moodboard", gradient: "from-blue-600 to-indigo-900" },
   { title: "Quiet jazz sessions", type: "Playlist", gradient: "from-amber-600 to-orange-900" },

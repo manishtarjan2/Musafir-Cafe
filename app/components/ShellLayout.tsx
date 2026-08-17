@@ -318,7 +318,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
             
             <div className="flex items-center gap-3 w-full max-w-lg max-sm:hidden">
               <span className="text-[10px] text-white/40 w-8 text-right">{formatTime(currentTime)}</span>
-              <div className="flex-1 h-1.5 bg-white/10 rounded-full relative cursor-pointer group" onClick={(e) => { const bounds = e.currentTarget.getBoundingClientRect(); handleProgressChange({ target: { value: (e.clientX - bounds.left) / bounds.width * duration } } as any); }}>
+              <div className="flex-1 h-1.5 bg-white/10 rounded-full relative cursor-pointer group" onClick={(e) => { const bounds = e.currentTarget.getBoundingClientRect(); handleProgressChange({ target: { value: (e.clientX - bounds.left) / bounds.width * duration } } as unknown as React.ChangeEvent<HTMLInputElement>); }}>
                 <div className="absolute top-0 left-0 h-full bg-[#e8b57a] rounded-full group-hover:bg-[#f6cd98] transition-colors" style={{ width: `${(currentTime / duration) * 100}%` }}>
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#e8b57a] rounded-full shadow opacity-0 group-hover:opacity-100 translate-x-1/2 transition-opacity" />
                 </div>
